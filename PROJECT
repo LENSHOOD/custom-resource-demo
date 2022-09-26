@@ -1,0 +1,16 @@
+domain: lenshood.github.io
+layout:
+- go.kubebuilder.io/v3
+projectName: custom-resource-demo
+repo: lenshood.github.io/cr-demo
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: lenshood.github.io
+  group: lenshood.github.io
+  kind: Network
+  path: lenshood.github.io/cr-demo/api/v1
+  version: v1
+version: "3"

@@ -1,0 +1,13 @@
+apiVersion: lenshood.github.io.lenshood.github.io/v1
+kind: Network
+metadata:
+  labels:
+    app.kubernetes.io/name: network
+    app.kubernetes.io/instance: network-sample
+    app.kubernetes.io/part-of: custom-resource-demo
+    app.kuberentes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: custom-resource-demo
+  name: network-sample
+spec:
+  cidr: "192.168.0.0/16"
+  gateway: "192.168.0.1"
