@@ -18,6 +18,10 @@ package controllers
 
 import (
 	"context"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/klog/v2"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -50,6 +54,47 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	_ = log.FromContext(ctx)
 
 	// TODO(user): your logic here
+	networkObj := &lenshoodgithubiov1.Network{}
+	err := r.Get(ctx, req.NamespacedName, networkObj)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			klog.Infof("-------------------- DELETED --------------------")
+			cfgMap := &v1.ConfigMap{}
+			err := r.Get(ctx, req.NamespacedName, cfgMap)
+			if errors.IsNotFound(err) {
+				// ignore
+				return ctrl.Result{}, nil
+			} else if err != nil {
+				return ctrl.Result{}, err
+			}
+
+			return ctrl.Result{}, r.Delete(ctx, cfgMap)
+		}
+
+		return ctrl.Result{}, err
+	}
+
+	klog.Infof("-------------------- CREATED or UPDATED --------------------")
+	configMap := &v1.ConfigMap{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "ConfigMap",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: req.Namespace,
+			Name:      req.Name,
+		},
+		Data: map[string]string{"cidr": networkObj.Spec.Cidr, "gateway": networkObj.Spec.Gateway},
+	}
+
+	err = r.Update(ctx, configMap)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return ctrl.Result{}, r.Create(ctx, configMap)
+		}
+
+		return ctrl.Result{}, err
+	}
 
 	return ctrl.Result{}, nil
 }
